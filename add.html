@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Task &middot; My Work To-Do List</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="topnav">
+    <a href="{{ url_for('start') }}" class="brand">To-Do List</a>
+    <div class="nav-links">
+      <a href="{{ url_for('start') }}">Start</a>
+      <a href="{{ url_for('add') }}" class="active">Add</a>
+      <a href="{{ url_for('tasks') }}">Tasks</a>
+      <a href="{{ url_for('notes') }}">Notes</a>
+      <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+  </div>
+
+  <div class="page-wrap">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="flash-wrap" style="margin-top:0;">
+        {% for category, msg in messages %}
+        <div class="flash {{ category }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+
+    <form class="card form-card" method="POST" action="{{ url_for('add') }}">
+      <h1 class="display page-title">Add Task</h1>
+      <p class="page-desc">Set it up once, choose how often it repeats.</p>
+
+      <div class="field">
+        <label for="name">Task name</label>
+        <input type="text" id="name" name="name" placeholder="e.g. Finish presentation" required>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label for="date">Date</label>
+          <input type="date" id="date" name="date" value="{{ today }}" required>
+        </div>
+        <div class="field">
+          <label for="alarm_time">Set alarm</label>
+          <input type="time" id="alarm_time" name="alarm_time" value="09:00">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Repeats</label>
+        <div class="pill-group">
+          {% for f in frequencies %}
+          <label class="pill-option">
+            <input type="radio" name="frequency" value="{{ f }}" {% if loop.first %}checked{% endif %}>
+            <span>{{ f }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label for="category">Category</label>
+          <select id="category" name="category">
+            {% for cat, color in categories.items() %}
+            <option value="{{ cat }}" data-color="{{ color }}">{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="level">Level of importance</label>
+          <select id="level" name="level">
+            {% for lvl in levels %}
+            <option value="{{ lvl }}" {% if lvl == 'Very Important' %}selected{% endif %}>{{ lvl }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Colour tag</label>
+        <div class="color-group" id="colorGroup">
+          {% for cat, color in categories.items() %}
+          <label class="color-option">
+            <input type="radio" name="color" value="{{ color }}" {% if loop.first %}checked{% endif %}>
+            <span style="background:{{ color }};"></span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="duration">Time needed (optional)</label>
+        <input type="text" id="duration" name="duration" placeholder="e.g. 1:00 hr">
+      </div>
+
+      <div class="field">
+        <label for="notify_phone">Notify this phone number</label>
+        <input type="text" id="notify_phone" name="notify_phone" value="{{ default_phone }}" placeholder="+919876543210">
+        <div class="pw-hint">We'll text this number {{ 15 }} minutes before the task's alarm time.</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Add task</button>
+    </form>
+  </div>
+
+  <script>
+    // keep the colour tag in sync with the chosen category by default
+    const categorySelect = document.getElementById('category');
+    const colorGroup = document.getElementById('colorGroup');
+    categorySelect.addEventListener('change', () => {
+      const chosen = categorySelect.options[categorySelect.selectedIndex].dataset.color;
+      const radios = colorGroup.querySelectorAll('input[type="radio"]');
+      radios.forEach(r => { if (r.value === chosen) r.checked = true; });
+    });
+  </script>
+</body>
+</html>

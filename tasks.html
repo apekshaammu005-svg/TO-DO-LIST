@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Tasks &middot; My Work To-Do List</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="topnav">
+    <a href="{{ url_for('start') }}" class="brand">To-Do List</a>
+    <div class="nav-links">
+      <a href="{{ url_for('start') }}">Start</a>
+      <a href="{{ url_for('add') }}">Add</a>
+      <a href="{{ url_for('tasks') }}" class="active">Tasks</a>
+      <a href="{{ url_for('notes') }}">Notes</a>
+      <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+  </div>
+
+  <div class="page-wrap">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="flash-wrap" style="margin-top:0; max-width:100%;">
+        {% for category, msg in messages %}
+        <div class="flash {{ category }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="dash-grid">
+      <div>
+        <div class="card clock-card">
+          {% if current %}
+          <div class="task-name">{{ current.name }}</div>
+          <div class="task-time">{{ current.alarm_time or '' }}</div>
+          <svg class="clock-face" id="clockFace" viewBox="0 0 220 220">
+            <circle cx="110" cy="110" r="104" fill="#fff" stroke="#E9DDC8" stroke-width="2"/>
+            <g id="tickGroup" stroke="#C9B8E8" stroke-width="2">
+              <!-- ticks drawn by JS -->
+            </g>
+            <line id="hourHand" x1="110" y1="110" x2="110" y2="70" stroke="#2E2A33" stroke-width="5" stroke-linecap="round"/>
+            <line id="minuteHand" x1="110" y1="110" x2="110" y2="45" stroke="#6B5A96" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="110" cy="110" r="6" fill="#2E2A33"/>
+            <text x="110" y="26" text-anchor="middle" font-size="11" fill="#9a93a8" font-family="Poppins">12</text>
+            <text x="196" y="115" text-anchor="middle" font-size="11" fill="#9a93a8" font-family="Poppins">3</text>
+            <text x="110" y="200" text-anchor="middle" font-size="11" fill="#9a93a8" font-family="Poppins">6</text>
+            <text x="26" y="115" text-anchor="middle" font-size="11" fill="#9a93a8" font-family="Poppins">9</text>
+          </svg>
+          {% else %}
+          <div class="empty-state">No tasks yet.<br>Add your first one!</div>
+          {% endif %}
+        </div>
+
+        <div style="height:22px;"></div>
+
+        <div class="fab-group">
+          <a href="{{ url_for('add') }}" class="fab-btn">+ Add Task</a>
+          <a href="{{ url_for('add') }}" class="fab-btn">+ Add List</a>
+          <a href="{{ url_for('add') }}" class="fab-btn">+ Add Routine</a>
+        </div>
+      </div>
+
+      <div>
+        <h1 class="display section-title">Task</h1>
+        {% if tasks %}
+          {% for t in tasks %}
+          <div class="task-row" style="background: {{ t.color }}55;">
+            <form method="POST" action="{{ url_for('toggle', task_id=t.id) }}">
+              <button type="submit" class="task-check {% if t.completed %}checked{% endif %}">
+                {% if t.completed %}&#10003;{% endif %}
+              </button>
+            </form>
+            <div class="task-info">
+              <div class="name {% if t.completed %}done{% endif %}">{{ t.name }}</div>
+              <div class="meta">{{ t.category }} &middot; {{ t.frequency }} &middot; {{ t.level }} &middot; {{ t.date }}</div>
+            </div>
+            <div class="task-time-badge">{{ t.alarm_time or '' }}</div>
+            <form method="POST" action="{{ url_for('delete', task_id=t.id) }}">
+              <button type="submit" class="del-btn">&times;</button>
+            </form>
+          </div>
+          {% endfor %}
+        {% else %}
+        <div class="card empty-state">No tasks yet. <a href="{{ url_for('add') }}" style="color:var(--lavender-deep); font-weight:700;">Add one now &rarr;</a></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    {% if current and current.alarm_time %}
+    const [h, m] = "{{ current.alarm_time }}".split(":").map(Number);
+    const hourAngle = ((h % 12) + m/60) * 30;
+    const minuteAngle = m * 6;
+    document.getElementById('hourHand').setAttribute('transform', `rotate(${hourAngle} 110 110)`);
+    document.getElementById('minuteHand').setAttribute('transform', `rotate(${minuteAngle} 110 110)`);
+    {% endif %}
+
+    // draw minute ticks
+    const tickGroup = document.getElementById('tickGroup');
+    if (tickGroup) {
+      for (let i = 0; i < 12; i++) {
+        const angle = i * 30 * Math.PI / 180;
+        const x1 = 110 + 96 * Math.sin(angle);
+        const y1 = 110 - 96 * Math.cos(angle);
+        const x2 = 110 + 86 * Math.sin(angle);
+        const y2 = 110 - 86 * Math.cos(angle);
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+        tickGroup.appendChild(line);
+      }
+    }
+  </script>
+</body>
+</html>

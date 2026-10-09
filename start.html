@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Work To-Do List</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="hero">
+    <div class="hero-nav">
+      <div class="hero-badge">To-Do List</div>
+      <div class="nav-links">
+        <a href="{{ url_for('start') }}" class="active">Start</a>
+        <a href="{{ url_for('add') }}">Add</a>
+        <a href="{{ url_for('tasks') }}">Tasks</a>
+        <a href="{{ url_for('notes') }}">Notes</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      </div>
+    </div>
+
+    <div class="hero-body">
+      <div>
+        <h1 class="display hero-title">My Work<br>To-Do<br>List</h1>
+        <p class="hero-sub">Welcome back{% if me %}, {{ me['name'].split(' ')[0] }}{% endif %}. Plan your day, week and year in one calm, tidy place — with tasks sorted by category and level of importance.</p>
+        <a href="{{ url_for('add') }}" class="btn btn-primary">Start planning &nbsp;&rarr;</a>
+      </div>
+    </div>
+
+    <!-- decorative blob signature -->
+    <svg class="blob" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+      <path d="M600,420 C600,540 500,600 380,600 C260,600 180,520 180,410 C180,300 270,220 390,220 C510,220 600,300 600,420 Z" fill="#B49BDD"/>
+      <g stroke="#2E2A33" stroke-width="6" stroke-linecap="round">
+        <line x1="380" y1="240" x2="330" y2="60"/>
+        <line x1="400" y1="230" x2="380" y2="40"/>
+        <line x1="425" y1="225" x2="430" y2="35"/>
+        <line x1="450" y1="225" x2="480" y2="45"/>
+        <line x1="470" y1="232" x2="525" y2="70"/>
+        <line x1="485" y1="245" x2="560" y2="105"/>
+      </g>
+    </svg>
+
+    <div class="callout">
+      <div style="border:2px dotted #2E2A33; border-radius:50%; padding:26px 20px;">
+        The best work of my life starts here
+      </div>
+    </div>
+  </div>
+</body>
+</html>

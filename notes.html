@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notes &amp; Reminders &middot; My Work To-Do List</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="topnav">
+    <a href="{{ url_for('start') }}" class="brand">To-Do List</a>
+    <div class="nav-links">
+      <a href="{{ url_for('start') }}">Start</a>
+      <a href="{{ url_for('add') }}">Add</a>
+      <a href="{{ url_for('tasks') }}">Tasks</a>
+      <a href="{{ url_for('notes') }}" class="active">Notes</a>
+      <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+  </div>
+
+  <div class="page-wrap">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="flash-wrap" style="margin-top:0; max-width:100%;">
+        {% for category, msg in messages %}
+        <div class="flash {{ category }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+
+    <h1 class="display page-title">Notes &amp; Reminders</h1>
+    <p class="page-desc">Upcoming SMS reminders on the left, your pinned notes on the right.</p>
+
+    <div class="notes-layout">
+      <!-- LEFT: upcoming reminders + sms activity -->
+      <div>
+        <h2 class="display" style="font-size:24px; margin-bottom:14px;">Upcoming reminders</h2>
+        {% if reminders %}
+          {% for r in reminders %}
+          <div class="reminder-row">
+            <div class="reminder-dot" style="background: {{ r.color }};"></div>
+            <div class="reminder-info" style="flex:1;">
+              <div class="name">{{ r.name }}</div>
+              <div class="meta">{{ r.date }} at {{ r.alarm_time or '—' }} &middot; texts {{ r.notify_phone }} 15 min before</div>
+            </div>
+            {% if r.reminder_sent %}
+            <span style="font-size:12px; font-weight:700; color:#2C6B3F;">Sent ✓</span>
+            {% else %}
+            <span style="font-size:12px; font-weight:700; color:var(--ink-soft);">Pending</span>
+            {% endif %}
+          </div>
+          {% endfor %}
+        {% else %}
+        <div class="card empty-state">No upcoming tasks with an alarm time yet.</div>
+        {% endif %}
+
+        <h2 class="display" style="font-size:24px; margin:28px 0 14px;">SMS activity</h2>
+        {% if demo_mode %}
+        <div class="demo-banner" style="text-align:left;">Demo mode: no Twilio account configured, so messages below were simulated (logged) instead of actually texted.</div>
+        {% endif %}
+        {% if outbox %}
+          {% for o in outbox %}
+          <div class="outbox-item"><b>{{ o.created_at }}</b> &rarr; {{ o.phone }}: {{ o.message }}</div>
+          {% endfor %}
+        {% else %}
+        <div class="card empty-state">No messages sent yet.</div>
+        {% endif %}
+      </div>
+
+      <!-- RIGHT: pinned notes -->
+      <div class="pinboard">
+        <div class="pinboard-title">📌 Pinned notes</div>
+
+        <form class="card note-form-card" method="POST" action="{{ url_for('add_note') }}">
+          <div class="field" style="margin-bottom:12px;">
+            <input type="text" name="title" placeholder="Title (optional)" style="width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid var(--cream-line); font-family:'Poppins',sans-serif;">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <textarea name="content" rows="3" placeholder="Write a quick note..." required style="width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid var(--cream-line); font-family:'Poppins',sans-serif; resize:vertical;"></textarea>
+          </div>
+          <div class="note-color-picker">
+            {% for c in note_colors %}
+            <label class="color-option">
+              <input type="radio" name="color" value="{{ c }}" {% if loop.first %}checked{% endif %}>
+              <span style="background:{{ c }}; width:26px; height:26px;"></span>
+            </label>
+            {% endfor %}
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" style="margin-top:14px; padding:11px;">Pin note</button>
+        </form>
+
+        {% for n in notes %}
+        <div class="sticky-note" style="background: {{ n.color }};">
+          <div class="pin"></div>
+          {% if n.title %}<div class="note-title">{{ n.title }}</div>{% endif %}
+          <div class="note-content">{{ n.content }}</div>
+          <form method="POST" action="{{ url_for('delete_note', note_id=n.id) }}">
+            <button type="submit" class="note-del">&times;</button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

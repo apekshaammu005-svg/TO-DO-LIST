@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if mode == 'verify' %}Verify phone{% elif mode == 'signup' %}Create account{% else %}Sign in{% endif %} &middot; My Work To-Do List</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="auth-shell">
+    <svg class="auth-blob" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+      <path d="M600,420 C600,540 500,600 380,600 C260,600 180,520 180,410 C180,300 270,220 390,220 C510,220 600,300 600,420 Z" fill="#B49BDD" opacity="0.5"/>
+    </svg>
+
+    <div class="card auth-card">
+      <div class="auth-brand">To-Do List</div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-wrap">
+          {% for category, msg in messages %}
+          <div class="flash {{ category }}">{{ msg }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      {% endwith %}
+
+      {% if mode == 'verify' %}
+        <p class="auth-tagline">Enter the 6-digit code we texted to your phone to finish creating your account.</p>
+
+        {% if demo_mode %}
+        <div class="demo-banner">Demo mode: no SMS account is configured, so your code was shown above instead of texted.</div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('verify') }}">
+          <div class="otp-boxes">
+            <input type="text" maxlength="1" inputmode="numeric" required>
+            <input type="text" maxlength="1" inputmode="numeric" required>
+            <input type="text" maxlength="1" inputmode="numeric" required>
+            <input type="text" maxlength="1" inputmode="numeric" required>
+            <input type="text" maxlength="1" inputmode="numeric" required>
+            <input type="text" maxlength="1" inputmode="numeric" required>
+          </div>
+          <input type="hidden" name="otp" id="otpValue">
+          <button type="submit" class="btn btn-primary btn-block">Verify &amp; continue</button>
+        </form>
+        <form method="POST" action="{{ url_for('resend_otp') }}">
+          <button type="submit" class="btn btn-ghost btn-block" style="margin-top:12px;">Resend code</button>
+        </form>
+
+        <script>
+          const boxes = document.querySelectorAll('.otp-boxes input');
+          const hidden = document.getElementById('otpValue');
+          function syncValue() {
+            hidden.value = Array.from(boxes).map(b => b.value).join('');
+          }
+          boxes.forEach((box, i) => {
+            box.addEventListener('input', () => {
+              box.value = box.value.replace(/\D/g, '');
+              if (box.value && i < boxes.length - 1) boxes[i+1].focus();
+              syncValue();
+            });
+            box.addEventListener('keydown', (e) => {
+              if (e.key === 'Backspace' && !box.value && i > 0) boxes[i-1].focus();
+            });
+          });
+        </script>
+
+      {% else %}
+        <p class="auth-tagline">Plan your day, week and year in one calm, tidy place.</p>
+
+        <div class="auth-tabs">
+          <a href="{{ url_for('auth', mode='signin') }}" class="{{ 'active' if mode == 'signin' }}">Sign in</a>
+          <a href="{{ url_for('auth', mode='signup') }}" class="{{ 'active' if mode == 'signup' }}">Create account</a>
+        </div>
+
+        {% if mode == 'signup' %}
+        <form method="POST" action="{{ url_for('register') }}" id="signupForm">
+          <div class="field">
+            <label for="name">Full name</label>
+            <input type="text" id="name" name="name" required>
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="text" id="email" name="email" placeholder="you@example.com" required>
+          </div>
+          <div class="field">
+            <label for="phone">Phone number</label>
+            <input type="text" id="phone" name="phone" placeholder="+919876543210" required>
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+            <div class="pw-meter"><div class="pw-meter-fill" id="pwFill"></div></div>
+            <div class="pw-hint" id="pwHint">
+              <span id="r-len">8+ chars</span>
+              <span id="r-low">lowercase</span>
+              <span id="r-up">UPPERCASE</span>
+              <span id="r-num">number</span>
+              <span id="r-sym">symbol</span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="confirm">Confirm password</label>
+            <input type="password" id="confirm" name="confirm" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Create account</button>
+        </form>
+        <div class="auth-foot">We'll text a 6-digit code to verify your phone before you can sign in.</div>
+
+        <script>
+          const pw = document.getElementById('password');
+          const fill = document.getElementById('pwFill');
+          const marks = {
+            len: document.getElementById('r-len'),
+            low: document.getElementById('r-low'),
+            up: document.getElementById('r-up'),
+            num: document.getElementById('r-num'),
+            sym: document.getElementById('r-sym'),
+          };
+          pw.addEventListener('input', () => {
+            const v = pw.value;
+            const checks = {
+              len: v.length >= 8,
+              low: /[a-z]/.test(v),
+              up: /[A-Z]/.test(v),
+              num: /\d/.test(v),
+              sym: /[^A-Za-z0-9]/.test(v),
+            };
+            let score = 0;
+            Object.keys(checks).forEach(k => {
+              marks[k].classList.toggle('ok', checks[k]);
+              if (checks[k]) score++;
+            });
+            const pct = (score / 5) * 100;
+            fill.style.width = pct + '%';
+            fill.style.background = score <= 2 ? '#F2A8A0' : score <= 4 ? '#F6E1A6' : '#B8E0C8';
+          });
+        </script>
+
+        {% else %}
+        <form method="POST" action="{{ url_for('login') }}">
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="text" id="email" name="email" placeholder="you@example.com" required>
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+        </form>
+        <div class="auth-foot">New here? <a href="{{ url_for('auth', mode='signup') }}">Create an account</a></div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>
